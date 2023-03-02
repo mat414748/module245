@@ -1,0 +1,10 @@
+@media only screen and (max-width: 1150px)  {
+/*Code that makes Navbar Responsible*/
+.tab{
+    font-size: 3vw;
+    margin-top: 30px;
+}
+.logo{
+    display: none;
+}
+}

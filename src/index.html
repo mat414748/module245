@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link href='https://fonts.googleapis.com/css?family=B612' rel='stylesheet'>
+        <link rel="stylesheet" href="../tailwindStyles/style.css"/>
+        <link rel="stylesheet" href="CSS/responsive.css">
+        <title>Table-Controller</title>
+    </head>
+    <body class="bg-gray-200">
+        <div class="bg-white border-b-2 border-black flex flex-row">
+            <img src="./materials/logoGruppe3.png" alt="Logo" class="h-[60px] ml-4 mt-5 logo">
+            <div class="tab cursor-pointer" id="homePage" tabindex="6">
+                <p class="text-[#A88F15]">Home</p>
+                <p class="text-[#8C7B5A]">page</p>
+            </div>
+            <!-- hidden -->
+            <div class="tab cursor-pointer" id="roomSpace" tabindex="7">
+                <p class="text-[#A88F15]">Room</p>
+                <p class="text-[#8C7B5A]">Space</p>
+            </div>
+            <div class="tab cursor-pointer" id="parkingSpace" tabindex="8">
+                <p class="text-[#A88F15]">Parking</p>
+                <p class="text-[#8C7B5A]">space</p>
+            </div>
+            <div class="font-bold cursor-pointer text-[60px] ml-auto mr-20 mt-2" tabindex="9">
+                <span class="text-[#A88F15]">EN</span>
+                <span class="text-[#8C7B5A]">V</span>
+            </div>
+        </div>
+        <div id="mainDiv"></div>
+        <div class="relative bottom-[0px] w-[100%] mt-[8%] text-center text-[15px]">
+            M245 Gruppe3 | Zieglerstrasse 64, 3007 Bern | Telefon: +41 79 299 79 01<br>
+            E-mail: nick.zeyer@ict.csbe.ch | Managing Director: Nick Zeyer
+        </div>
+        <!-- Scripts -->
+        <script src="controller/mainDivChanger.js"></script>
+        <script src="controller/alerts.js"></script>
+        <script src="controller/reservation.js"></script>
+        <!-- <script src="controller/requestAndResponseControllet.js"></script>
+        <script src="controller/showSubInfo.js"></script>
+        <script src="controller/createOrEditClient.js"></script>
+         -->
+    </body>
+</html>

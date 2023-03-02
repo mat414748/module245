@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Table controller</title>
+        <meta name="viewport" content="width=device-width"> 
+        <link charset="utf-8" rel="stylesheet" href="../../tailwindStyles/style.css"/>
+        <link rel="stylesheet" href="../CSS/responsive.css">
+    </head>
+    
+    <body class="bg-[rgb(242,242,242)] relative">
+        <!-- w-[80%] flex flex-row bg-slate-300 border-solid border-2 border-black -->
+        <div class="dotted flex flex-row border-solid border-b-2 border-black h-20">
+            <img src="../materials/Logo.webp" alt="Logo" class="h-[60px] mt-2.5 ml-4 logo">
+            <div class="tab cursor-pointer" id="homePage">Menü</div>
+            <div class="tab cursor-pointer" id="aboutUs">Über uns</div>
+            <!-- hidden  -->
+            <div class="tab cursor-pointer" id="clientList">Clientenliste</div>
+            <div class="tab cursor-pointer " id="loginLogout">Einloggen</div>
+            <div class="text-[40px]">|</div>
+            <div class="relative mt-5">
+                <input type="checkbox" id="sortbox" class="hidden absolute">
+                <label for="sortbox" class="flex items-center space-x-1 cursor-pointer">
+                <span class="text-lg tab">DE</span>
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </label>
+            
+                    <div id="sortboxmenu" class="absolute mt-1 right-1 top-full min-w-max shadow rounded opacity-0 bg-gray-300 border border-gray-400 transition delay-75 ease-in-out z-10">
+                    <ul class="block text-right text-gray-900">
+                        <li><a href="../index.html" class="block px-3 py-2 hover:bg-gray-200">Englisch</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="" id="mainDiv"></div>
+        <div class="absolute bottom-[-80px] w-[100%] text-center text-[15px]">
+            M306B Gruppe Rot | Zieglerstrasse 64, 3007 Bern | Telefon: +41 79 299 79 01 </br>  
+            E-mail: manuel.schibli@ict.csbe.ch | Managing Director: Manuel Schilbli
+        </div>
+        <!-- Scripts -->
+        <script src="../controllerDE/requestAndResponseControllet.js"></script>
+        <script src="../controllerDE/alerts.js"></script>
+        <script src="../controllerDE/showSubInfo.js"></script>
+        <script src="../controllerDE/createOrEditClient.js"></script>
+        <script src="../controllerDE/mainDivChanger.js"></script>
+    </body>
+</html>
