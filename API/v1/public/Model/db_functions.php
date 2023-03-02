@@ -21,7 +21,7 @@ function reserve_room($room, $date, $time_from, $time_to, $user) {
    if (!$result){
       message("Error reserving a room",500);
    } else if ($result === true && $database->affected_rows == 0){
-      message("Room with this name doesn't exist. Name: " . $name, 404);  
+      message("Room with this name doesn't exist. Name: " . $room, 404);  
    } else {
       message("Successfully reserved room",201);
    }

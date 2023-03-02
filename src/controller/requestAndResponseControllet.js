@@ -25,36 +25,22 @@ function updateClient(id, name, surname, sex, email, creditRaiting, street, post
         prepayment: 0
     };
     request = new XMLHttpRequest();
-    request.open("PUT", "/API/v1/Client/" + id);
+    request.open("PUT", "/API/V1/Client/" + id);
     request.onreadystatechange = requestCreateAndUpdate; 
     request.send(JSON.stringify(data));
 }
+
 //POST
-function createClient(name, surname, sex, email, creditRaiting, street, postcode, city, billingAdress, privatePhonenumber, companyPhonenumber) {
+//Create room
+function createRoom(room, floor) {
     //Data block
+    const newFloor = parseInt(floor);
     var data = {
-        Name: name,
-        Surname: surname,
-        Sex: sex,
-        email: email,
-        CreditRaiting: creditRaiting,
-        Street: street,
-        Postcode: postcode,
-        City: city,
-        billingAddress: billingAdress,
-        phonenumberCompany: privatePhonenumber,
-        phonenumberPrivate: companyPhonenumber,
-        joinDate: Date.now(),
-        VIP: 1,
-        highFrequency: 1,
-        creditRating: 1,
-        debt: 1,
-        creditcard: 4444555566667777,
-        bill: "5",
-        prepayment: 0
+        room: room,
+        floor: newFloor
     };
     request = new XMLHttpRequest();
-    request.open("POST", "/API/v1/Client");
+    request.open("POST", "/API/V1/CreateRoom");
     request.onreadystatechange = requestCreateAndUpdate; 
     request.send(JSON.stringify(data));
 }
@@ -64,13 +50,13 @@ function requestCreateAndUpdate(event) {
         return;
     } 
     const answer = JSON.parse(request.responseText);
-    document.getElementById('clientList').click();
-    customAlert(3, answer.information);
+    document.getElementById('homePage').click();
+    customAlert(3, answer);
 }
 //DELETE
 function deleteClient(id) {
     request = new XMLHttpRequest();
-    request.open("DELETE", "/API/v1/Client/" + id);
+    request.open("DELETE", "/API/V1/Client/" + id);
     request.onreadystatechange = requestDelete; 
     request.send();
 }
@@ -86,7 +72,7 @@ function requestDelete(event) {
 //GET ALL
 function getAllClients() {
     request = new XMLHttpRequest();
-    request.open("GET", "/API/v1/Clients");
+    request.open("GET", "/API/V1/Clients");
     request.onreadystatechange = requestAnswer; 
     request.send();
 }
@@ -112,11 +98,11 @@ function requestAnswer(event) {
 function authentication(name, password) {
     //Data block
     var data = {
-            username: name.value,
-            password: password.value
-        };
+            username: name,
+            password: password
+    };
     request = new XMLHttpRequest();
-    request.open("POST", "/API/v1/Login");
+    request.open("POST", "/API/V1/Authentication");
     request.onreadystatechange = requestAuthentication; 
     request.send(JSON.stringify(data));
 }
@@ -126,10 +112,9 @@ function requestAuthentication() {
         return;
     } 
     const answer = JSON.parse(request.responseText);
-    if (typeof answer.error !== 'undefined' && answer.error.includes("not Found")) {
+    if (answer.message.includes("Invalid")) {
         customAlert(2, "Wrong password or username");   
-    } else if (answer.information == "Succesfuly created Token") {
-        logout();
+    } else if (answer.message.includes("created")) {
         customAlert(3, "Succesfully login")
         typeOfHomePage = 1;
         mainPage();

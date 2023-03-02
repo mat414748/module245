@@ -1,5 +1,8 @@
 let typeOfHomePage = 0;
 let activeList = 0;
+//Label + input styles
+const labelStyle = "text-[40px] text-left w-[30rem] m-auto mt-5 font-bold";
+const inputStyle = "text-[30px] text-left w-[30rem] m-auto border-2 border-black rounded placeholder:italic placeholder:text-slate-400";
 //Assigns a function to each button on the panel
 function setEvent() {
     //Homepage function
@@ -12,12 +15,14 @@ function setEvent() {
         //Room reservation function
         document.getElementById("roomSpace").addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                activeList = 0;
                 reservation(0);
             }
         })
         //Parking reservation function
         document.getElementById("parkingSpace").addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                activeList = 0;
                 reservation(1); 
             }
         })
@@ -43,12 +48,14 @@ function mainPage() {
     const mainPageFunctions =  document.createElement("div");
     const roomSpaceList = document.createElement("div");
     const parkingSpaceList = document.createElement("div");
+    const adminFunctions = document.createElement("div");
     //Design for all elements
     welcome.className = "text-[70px] font-bold text-[#A88F15]";
     welcomeText.className = "text-[40px] font-bold w-[55%] m-auto";
     subText.className = "text-[25px] italic w-[30%] m-auto mt-5 mb-5";
     mainPageFunctions.className = "flex flex-row";
     mainDiv.className = "text-center mt-5";
+    adminFunctions.className = "text-[40px] bg-[#8C7B5A] text-white border-4 border-black mt-5 pb-2 m-auto cursor-pointer focus:bg-[#C4AD7E] hover:bg-[#C4AD7E]";
     const buttonDesign = "text-[50px] border-4 border-black rounded-lg mt-5 pb-2 m-auto w-[30rem] cursor-pointer text-white";
     //Index and ID's
     loginHome.tabIndex = 1;
@@ -57,12 +64,14 @@ function mainPage() {
     subText.innerText = "After work, don't forget to log out for security reasons";
     roomSpaceList.innerText = "Room space list";
     parkingSpaceList.innerText = "Parking space list";
+    adminFunctions.innerText = "Admin Functions";
     if (typeOfHomePage === 1) {  
         welcomeText.innerText = "Congratulations, you have successfully logged in as (User/Admin). Now you can reserve a parking space or a room.";
         loginHome.innerText = "Logout now";
         //Index
         roomSpaceList.tabIndex = 2;
-        parkingSpaceList.tabIndex = 3;
+        adminFunctions.tabIndex = 3;
+        parkingSpaceList.tabIndex = 4;
         if (activeList === 1) {
             roomSpaceList.className = buttonDesign + " bg-[#8AB5AE]";
             parkingSpaceList.className = buttonDesign + " bg-[#698A85] focus:bg-[#8AB5AE] hover:bg-[#8AB5AE]";
@@ -85,8 +94,9 @@ function mainPage() {
         document.getElementById("roomSpace").style.display = "none";
         document.getElementById("parkingSpace").style.display = "none";
     }
-    //Additional login or logout button
+    //Functions
     ["click","keypress"].forEach(function(event) {
+        //Additional login or logout button
         loginHome.addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
                 switch (typeOfHomePage) {
@@ -98,10 +108,8 @@ function mainPage() {
                         break;
                 }
             }  
-        })
-    });
-    //Room and parking list buttons
-    ["click","keypress"].forEach(function(event) {
+        });
+        //Room and parking list buttons
         roomSpaceList.addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
                 activeList = 1;
@@ -114,7 +122,15 @@ function mainPage() {
                 createList(1);
             }  
         });
+        //Admin button
+        adminFunctions.addEventListener(event, function(keyEvent) {
+            if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                activeList = 0;
+                adminFunctionsPlace();
+            }  
+        });
     });
+    
     //Connect all elements
     mainDiv.appendChild(welcome);
     mainDiv.appendChild(welcomeText);
@@ -122,6 +138,7 @@ function mainPage() {
     mainDiv.appendChild(loginHome);
     if (typeOfHomePage === 1) { 
         mainPageFunctions.appendChild(roomSpaceList);
+        mainPageFunctions.appendChild(adminFunctions);
         mainPageFunctions.appendChild(parkingSpaceList);
         mainDiv.appendChild(mainPageFunctions) 
     };
@@ -147,9 +164,6 @@ function loginWindow() {
     //Id for user and password inputs
     usernameInput.id = "username";
     passwordInput.id = "password";
-    //Style templates  
-    const labelStyle = "text-[40px] text-left w-[30rem] m-auto mt-5 font-bold";
-    const inputStyle = "text-[30px] text-left w-[30rem] m-auto border-2 border-black rounded placeholder:italic placeholder:text-slate-400";
     passwordInput.type = "password";
     //Plaseholders for inputs
     usernameInput.placeholder = "Enter your username";
@@ -176,9 +190,7 @@ function loginWindow() {
                 } else if (document.getElementById("password").value == "") {
                     customAlert(1, "Please enter the password");
                 } else {
-                    customAlert(3, "Successful login");
-                    typeOfHomePage = 1;
-                    mainPage();
+                    authentication(usernameInput.value, passwordInput.value);
                 }
             }  
         })
