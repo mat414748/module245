@@ -1,92 +1,93 @@
 <?php
 $database = new mysqli("localhost", "root", "", "245");
 require_once "../public/index.php";
-/**
- * A function for creating a new product and adding it to the database.
- * @param sku Product Sku
- * @param active Is the product active
- * @param id_category What category does the product belong to
- * @param name Product Name
- * @param image Product Image
- * @param description Product Description
- * @param price Product Price
- * @param stock Number of products in stock
- */
-function reserve_room($sku, $active, $id_category, $name, $image, $description, $price, $stock) {
+
+//Rooms
+//Create a room
+function create_room($room, $floor) {
    global $database;
-   if ($id_category == "NULL") {
-      $result = $database->query("INSERT INTO product VALUES ('','$sku','$active', NULL,'$name','$image','$description','$price','$stock')");
-   } else {
-      $result = $database->query("INSERT INTO product VALUES ('','$sku','$active','$id_category','$name','$image','$description','$price','$stock')");
-   }
+   $result = $database->query("INSERT INTO rooms VALUES ('$room', '$floor')");
    if (!$result){
-      message("Error creating a new product",500);
+      message("Error creating a room",500);
    } else {
-      message("Successfully created product",201);
+      message("Successfully created room",201);
    }
 }
-/**
- * Function for removing product from db
- * @param id Product ID
- */
-function delete_product($id) {
+
+//Reserve a room
+function reserve_room($room, $date, $time_from, $time_to, $user) {
    global $database;
-   $result = $database->query("DELETE FROM product WHERE product_id = $id");
+   $result = $database->query("INSERT INTO reserved_rooms VALUES ('', '$room', '1', '$time_from', '$time_to', '$date', '$user')");
+   if (!$result){
+      message("Error reserving a room",500);
+   } else if ($result === true && $database->affected_rows == 0){
+      message("Room with this name doesn't exist. Name: " . $name, 404);  
+   } else {
+      message("Successfully reserved room",201);
+   }
+}
+
+//Get all rooms
+function get_all_rooms() {
+   global $database; 
+   $result = $database->query("SELECT * FROM rooms");
+   if (!$result){
+      message("Error when requesting a list of rooms", 500); 
+   } else if ($result === true || $result->num_rows == 0){
+      message("No rooms found", 404);  
+   } else {
+      $rooms_list = array( );
+		while ($room = $result->fetch_assoc()) {
+			$rooms_list[] = $room;
+		}
+      message($rooms_list, 200);
+   }
+}
+
+//Get all reserved rooms
+function get_all_reserved_rooms() {
+   global $database; 
+   $result = $database->query("SELECT * FROM reserved_rooms");
+   if (!$result){
+      message("Error when requesting a list of reserved rooms", 500); 
+   } else if ($result === true || $result->num_rows == 0){
+      message("No reserved rooms found", 404);  
+   } else {
+      $reserved_rooms_list = array( );
+		while ($reserved_room = $result->fetch_assoc()) {
+			$reserved_rooms_list[] = $reserved_room;
+		}
+      message($reserved_rooms_list, 200);
+   }
+}
+
+//Delete room
+function delete_room($name) {
+   global $database;
+   $result = $database->query("DELETE FROM rooms WHERE room = '$name'");
    if (!$result){
       message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("An object with this ID does not exist. ID: " . $id, 404);  
+      message("An object with this name does not exist. Name: " . $name, 404);  
    } else {
-      message("The product was successfully removed",200);  
+      message("The room was successfully removed",200);  
    }
 }
-/**
- * Function to search for all products
- */
-function get_all_products() {
-   global $database; 
-   $result = $database->query("SELECT * FROM product");
-   if (!$result){
-      message("Error when requesting a list of products",500); 
-   } else if ($result === true || $result->num_rows == 0){
-      message("No products found",404);  
-   } else {
-      $products_list = array( );
-		while ($product = $result->fetch_assoc()) {
-			$products_list[] = $product;
-		}
-      message($products_list, 200);
-   }
-}
-/**
- * Function to search for a specific product
- * @param id Product ID
- * @return product Returns the found product as an object
- */
-function get_product($id) {
+
+//Delete reservation of room
+function delete_room_reservation($id) {
    global $database;
-   $result = $database->query("SELECT * FROM product WHERE product_id = $id");
+   $result = $database->query("DELETE FROM reserved_rooms WHERE id = '$id'");
    if (!$result){
-      message("Error when requesting a product",500); 
-   } else if ($result === true || $result->num_rows == 0){
-      message("No product found",404);  
+      message("Request error", 500);  
+   } else if ($result === true && $database->affected_rows == 0){
+      message("An object with this id does not exist. ID: " . $id, 404);  
    } else {
-      $product = $result->fetch_assoc();
-      return $product;  
+      message("The room reservation was successfully removed", 200);  
    }
 }
-/**
- * Function for changing product data in a database row
- * @param id Product ID to change it
- * @param sku Product Sku
- * @param active Is the product active
- * @param id_category What category does the product belong to
- * @param name Product Name
- * @param image Product Image
- * @param description Product Description
- * @param price Product Price
- * @param stock Number of products in stock
- */
+
+//Update room
 function update_product($id, $sku, $active, $id_category, $name, $image, $description, $price, $stock) {
    global $database;
    if ($id_category == "NULL") {
@@ -103,86 +104,87 @@ function update_product($id, $sku, $active, $id_category, $name, $image, $descri
    }
 }
 
-//Categories
-/**
- * A function for creating a new category and adding it to the database.
- * @param active Is the category active
- * @param name Category name
- */
-function create_category($active, $name) {
+//Parkings
+//Create a parking place
+function create_parking_place($parking) {
    global $database;
-   $result = $database->query("INSERT INTO category VALUES ('','$active','$name')");
+   $result = $database->query("INSERT INTO parking_spots VALUES ('$parking')");
    if (!$result){
-     message("Error creating a new product",500);
+      message("Error creating a parking place", 500);
    } else {
-     message("Successfully created category",201);
+      message("Successfully created parking place", 201);
    }
 }
-/**
- * Function for removing category from db
- * @param id Category ID
- */
-function delete_category($id) {
+
+//Reserve a parking
+function reserve_parking($spot, $date, $time_from, $time_to, $user) {
    global $database;
-   $result = $database->query("DELETE FROM category WHERE category_id = $id");
+   $result = $database->query("INSERT INTO reserved_parking VALUES ('', '$spot', '1', '$time_from', '$time_to', '$date', '$user')");
+   if (!$result){
+      message("Error reserving a parking place", 500);
+   } else if ($result === true && $database->affected_rows == 0){
+      message("Parking place with this name doesn't exist. Name: " . $spot, 404);  
+   } else {
+      message("Successfully reserved spot", 201);
+   }
+}
+//Get all parking places
+function get_all_parkings() {
+   global $database; 
+   $result = $database->query("SELECT * FROM parking_spots");
+   if (!$result){
+      message("Error when requesting a list of parking_spots", 500); 
+   } else if ($result === true || $result->num_rows == 0){
+      message("No parking spots found", 404);  
+   } else {
+      $parking_list = array( );
+		while ($parking = $result->fetch_assoc()) {
+			$parking_list[] = $parking;
+		}
+      message($parking_list, 200);
+   }
+}
+
+//Get all reserved parking places
+function get_all_reserved_parkings() {
+   global $database; 
+   $result = $database->query("SELECT * FROM reserved_parking");
+   if (!$result){
+      message("Error when requesting a list of reserved parking places", 500); 
+   } else if ($result === true || $result->num_rows == 0){
+      message("No reserved parking places found", 404);  
+   } else {
+      $reserved_parking_list = array( );
+		while ($reserved_parking = $result->fetch_assoc()) {
+			$reserved_parking_list[] = $reserved_parking;
+		}
+      message($reserved_parking_list, 200);
+   }
+}
+
+//Delete parking
+function delete_parking($name) {
+   global $database;
+   $result = $database->query("DELETE FROM parking_spots WHERE spot = '$name'");
    if (!$result){
       message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("An object with this ID does not exist. ID: " . $id, 404);  
+      message("An object with this name does not exist. Name: " . $name, 404);  
    } else {
-      message("The category was successfully removed",200);  
-   } 
-}
-/**
- * Function to search for all categories
- */
-function get_all_categories() {
-   global $database;
-   $result = $database->query("SELECT * FROM category");
-   if (!$result){
-      message("Error when requesting a list of categories",500); 
-   } else if ($result === true || $result->num_rows == 0){
-      message("No categories found",404);  
-   } else {
-      $categories_list = array( );
-		while ($category = $result->fetch_assoc()) {
-			$categories_list[] = $category;
-		}
-      message($categories_list, 200);
+      message("The parking place was successfully removed",200);  
    }
 }
-/**
- * Function to search for a specific category
- * @param id Category ID
- * @return category Returns the found category as an object
- */
-function get_category($id) {
+
+//Delete reservation of parking
+function delete_parking_reservation($id) {
    global $database;
-   $result = $database->query("SELECT * FROM category WHERE category_id = $id");
+   $result = $database->query("DELETE FROM reserved_parking WHERE id = '$id'");
    if (!$result){
-      message("Error when requesting a category", 500); 
-   } else if ($result === true || $result->num_rows == 0){
-      message("No category found", 404);  
-   } else {
-      $category = $result->fetch_assoc();
-      return $category;  
-   }
-}
-/**
- * Function for changing category data in a database row
- * @param id Category ID
- * @param active Is the category active
- * @param name Category name
- */
-function update_category($id, $active, $name) {
-   global $database;
-   $result = $database->query("UPDATE category SET active = '$active', name = '$name' WHERE category_id = $id");
-   if (!$result){
-      message("Update error", 500);  
+      message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("The product is not found or an identical product already exists", 400);  
+      message("An object with this id does not exist. ID: " . $id, 404);  
    } else {
-      message("The product has been successfully updated", 200); 
+      message("The parking reservation was successfully removed",200);  
    }
 }
 
