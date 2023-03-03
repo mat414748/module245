@@ -1,8 +1,5 @@
 let typeOfHomePage = 0;
 let activeList = 0;
-//Label + input styles
-const labelStyle = "text-[40px] text-left w-[30rem] m-auto mt-5 font-bold";
-const inputStyle = "text-[30px] text-left w-[30rem] m-auto border-2 border-black rounded placeholder:italic placeholder:text-slate-400";
 //Assigns a function to each button on the panel
 function setEvent() {
     //Homepage function
@@ -210,25 +207,11 @@ function logout() {
     typeOfHomePage = 0;
     mainPage();
     customAlert(3,"Successful logout");
-    //Logout onclick
-    /*login.onclick = function() {
-        document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-        login.innerText = "Login";
-        customAlert(3,"Successfully logout");
-        document.getElementById("clientList").style.display = "none";
-        typeOfHomePage = 0;
-        mainPage();
-        //And again login
-        login.onclick = function() {
-            loginWindow();
-        };
-    }*/
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
 
 //Create head for the table
 function createTableHead(tableHead, tableType, headType) {
-    //Style for all tabs
-    const tab = "text-[40px] text-center";
     //Place tab
     let tableCell = document.createElement("td");
     tableCell.className = tab + " w-[10%] mr-5";
@@ -247,7 +230,7 @@ function createTableHead(tableHead, tableType, headType) {
     }
     //Person tab
     tableCell = document.createElement("td");
-    tableCell.className = tab + " w-[25%]";
+    tableCell.className = tab + " w-[25%] ";
     tableCell.innerText = "Person";
     tableHead.appendChild(tableCell);
     //Time tab
@@ -268,7 +251,6 @@ function createTableHead(tableHead, tableType, headType) {
     tableCell.innerText = "";
     tableCell.appendChild(altTable);
     tableHead.appendChild(tableCell);
-    const tableHeadStyle = "text-[30px] border-4 border-black rounded-lg pb-2 m-auto cursor-pointer text-white";
     altTable.tabIndex = 5;
     altTable.id = "altTable";
     //Alt table 
@@ -301,70 +283,50 @@ function createTableLine(tableData, rowId) {
     const tableLine = document.createElement("tr");
     const informationTable = document.createElement("div");
     //Set id for each line
-    informationTable.id = "info"+rowId;
-    //Subinformation statement
-    let subInfoState = true;
-    //Style for all tabs
-    const tab = "text-[20px] text-left bg-white";
-    //Full name tab
+    informationTable.id = "info" + rowId;
+    //Place tab
     let tableCell = document.createElement("td");
-    tableCell.className = tab + " w-[20%]";
-    tableCell.innerText = tableData.Name + " " + tableData.Surname;
-    if (tableCell.innerText.length > 20) {
-        tableCell.innerText = tableCell.innerText.slice(0, 20);
-    }
-    tableLine.appendChild(tableCell);   
-    //Sex tab
-    tableCell = document.createElement("td");
-    tableCell.className = tab + " w-[10%]";
-    tableCell.innerText = tableData.Sex;
-    tableLine.appendChild(tableCell);  
-    //Adress tab
+    tableCell.className = tab + " w-[10%] mr-5";
+    if (tableData.room === undefined) {
+        tableCell.innerText = tableData.spot;
+    } else {
+        tableCell.innerText = tableData.room;
+    }   
+    tableLine.appendChild(tableCell);
+    //Person tab
     tableCell = document.createElement("td");
     tableCell.className = tab + " w-[25%]";
-    tableCell.innerText = tableData.Street + tableData.Postcode + tableData.City;
-    tableLine.appendChild(tableCell);  
-    //E-Mail tab
+    tableCell.innerText = tableData.user;
+    tableLine.appendChild(tableCell);
+    //Time tab
     tableCell = document.createElement("td");
-    tableCell.className = tab + " w-[25%]";
-    tableCell.innerText = Object.values(tableData)[10];
-    tableLine.appendChild(tableCell); 
+    tableCell.className = tab + " w-[15%]";
+    tableCell.innerText = tableData.res_from + "-\n" + tableData.res_till;
+    tableLine.appendChild(tableCell);
+    //Date tab
+    tableCell = document.createElement("td");
+    tableCell.className = tab + " w-[15%]";
+    tableCell.innerText = tableData.date;
+    tableLine.appendChild(tableCell);
     //Create functions for each line
     const deleteLine = document.createElement("div");
     const editLine = document.createElement("div");
-    const moreInfo = document.createElement("div");
-    //Set id for each subline
-    moreInfo.id = rowId;
     //Text for function buttons
-    deleteLine.innerText="🗑Delete";
-    editLine.innerText="✏Edit";
-    moreInfo.innerText="V";
+    deleteLine.innerText="🗑 Delete";
+    editLine.innerText="✏ Edit";
     //Design for elements
-    deleteLine.className = "border-2  border-black rounded pt-2 pr-1 text-red-500 cursor-pointer";
-    editLine.className = "ml-5 border-2  border-black rounded pt-2 pr-1 text-orange-500 cursor-pointer";
-    moreInfo.className = "ml-5 font-bold text-[30px] cursor-pointer rotate-0";
-    tableLine.className = "w-auto";
-    subTable.className = "m-auto w-[100%] mt-10";
-    //Cell for all functions
+    deleteLine.className = "text-[25px] border-2  border-black rounded pt-2 pr-1 text-red-500 cursor-pointer float-left";
+    editLine.className = "text-[25px] border-2  border-black rounded pt-2 pr-1 text-orange-500 cursor-pointer ml-10 float-left";
+    tableLine.className = "bg-white w-auto";
+    subTable.className = "m-auto border-separate border-spacing-y-5 w-[90%]";
+    //Dummy tab
     tableCell = document.createElement("td");
-    tableCell.className = "w-auto text-[20px] text-left bg-white flex flex-row w-auto";
-    //Show more information button
-    moreInfo.addEventListener("click", function() {
-        //If not open
-        if (subInfoState) {
-            moreInfo.className = moreInfo.className.replace("rotate-0", "rotate-90");;
-            informationTable.appendChild(subInformation(tableData));
-            subTable.after(informationTable);
-            subInfoState = false;
-        } 
-        //If open
-        else {
-            moreInfo.className = moreInfo.className.replace("rotate-90", "rotate-0");
-            document.getElementById("info"+moreInfo.id).innerHTML = "";
-            document.getElementById("info"+moreInfo.id).remove();
-            subInfoState = true;
-        }
-    })
+    tableCell.className = "w-[15%]";
+    tableCell.innerText = "";
+    tableCell.appendChild(deleteLine);
+    tableCell.appendChild(editLine);
+    tableLine.appendChild(tableCell);
+    /*
     //Delete line
     deleteLine.addEventListener("click", function(event) {
         deleteClient(tableData.ID);
@@ -373,10 +335,8 @@ function createTableLine(tableData, rowId) {
     editLine.addEventListener("click", function() {
         createOrEditClient(1, tableData);
     })
+    */
     //Connect all elements
-    tableCell.appendChild(deleteLine);
-    tableCell.appendChild(editLine);
-    tableCell.appendChild(moreInfo);
     tableLine.appendChild(tableCell); 
     subTable.appendChild(tableLine);
     //return line
@@ -392,7 +352,7 @@ function createList(tableType, headType=0) {
     //Create table head
     createTableHead(tableHead, tableType, headType);
     //Design for all elements
-    tableHead.className = "bg-[#8AB5AE] w-auto";
+    tableHead.className = " bg-[#8AB5AE] w-auto";
     tableView.className = "m-auto border-separate border-spacing-y-5 w-[90%]";
     //Connect all elements
     tableView.appendChild(tableHead);
@@ -400,11 +360,12 @@ function createList(tableType, headType=0) {
     document.getElementById("altTable").scrollIntoView();
     document.getElementById("altTable").focus();
     //Start generate lines
-    //generateList();
-}
-//Generate lines
-function generateList() {
-    getAllClients();
+    if (tableType === 0) {
+        listOfReservedRooms();
+    } else {
+        listOfReservedParkings();
+    }
+    
 }
 //On start click on mainpage
 setEvent();

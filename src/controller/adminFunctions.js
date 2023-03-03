@@ -16,8 +16,7 @@ function adminFunctionsPlace() {
     deleteParking.className = buttonDesign + " bg-[#590A10] focus:bg-[#A6131E] hover:bg-[#A6131E] leading-[150px]";
     cancel.className = buttonDesign + " m-auto bg-[#698A85] focus:bg-[#8AB5AE] hover:bg-[#8AB5AE]";
     gridBody.className = "text-center w-[80rem] m-auto grid gap-0 grid-cols-2 grid-rows-2";
-    //Span
-    const spanStyle = "inline-block align-middle leading-normal"
+    //Spans
     //Create room
     let corrector = document.createElement("span");
     corrector.className = spanStyle;
@@ -129,11 +128,19 @@ function createPlace(typeOfPlace) {
     });
     //Create
     ["click","keypress"].forEach(function(event) {
-        createNow.addEventListener(event, function(keyEvent) {
-            if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
-                createRoom(inputPlaceName.value, inputRoomFloor.value);
-            }  
-        });
+        if (typeOfPlace === 1) {
+            createNow.addEventListener(event, function(keyEvent) {
+                if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                    createRoom(inputPlaceName.value, inputRoomFloor.value);
+                }  
+            });
+        } else {
+            createNow.addEventListener(event, function(keyEvent) {
+                if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                    createParking(inputPlaceName.value, inputRoomFloor.value);
+                }  
+            });
+        }
     });
     //Apply
     mainDiv.appendChild(title);
@@ -147,7 +154,11 @@ function createPlace(typeOfPlace) {
 }
 
 function deletePlace(typeOfPlace) {
-    let roomOrParkingumber = 0;
+    if (typeOfPlace === 1) {
+        getAllRooms();
+    } else {
+        getAllParkings();
+    }
     //Create all elements with DOM
     const mainDiv = document.getElementById("mainDiv");
     mainDiv.innerHTML = '';
@@ -157,9 +168,7 @@ function deletePlace(typeOfPlace) {
     const leftWindow = document.createElement("div");
     const listLabel = document.createElement("div");
     const selector = document.createElement("select");
-    //Styles
-    const optionStyle = "text-[40px]";
-    const selectorStyle = "text-[50px] text-left";
+    selector.id = "selector";
     //first select option
     const dummyOption = document.createElement("option");
     dummyOption.innerText = "List of places";
@@ -167,36 +176,8 @@ function deletePlace(typeOfPlace) {
     dummyOption.selected = true;
     dummyOption.disabled = true;
     dummyOption.hidden = true;
+    dummyOption.id = "dummyOption";
     selector.appendChild(dummyOption);
-    //Another select
-    const selectorOptions = [
-        {Name:"A1",Status:0},
-        {Name:"A2",Status:0},
-        {Name:"A3",Status:1}
-    ];
-    selectorOptions.forEach((element) => {
-        const option = document.createElement("option");
-        if (element.Status == 0) {
-            option.className = optionStyle + " bg-[#025928]";
-            roomOrParkingumber++;
-        } else {
-            option.className = optionStyle + " bg-[#590A10]";
-        }
-        option.innerText = element.Name;
-        selector.appendChild(option);
-    });
-    //On dropdown change
-    selector.addEventListener("change", function() {
-        selectorOptions.forEach((element) => {
-            if (selector.value == element.Name && element.Status != 1) {
-                selector.className = selectorStyle + " bg-[#025928]";
-            } else if (selector.value == element.Name && element.Status == 1) {
-                selector.className = selectorStyle + " bg-[#698A85]";
-                dummyOption.selected = true;
-                customAlert(2, "This place is reserved now and can't be deleted");
-            }
-        })
-    });
     //Right window
     const rightWindow = document.createElement("div");
     //Red status
@@ -236,12 +217,19 @@ function deletePlace(typeOfPlace) {
     selector.tabIndex = 1;
     deleteNow.tabIndex = 2;
     ["click","keypress"].forEach(function(event) {
-        deleteNow.addEventListener(event, function(keyEvent) {
-            if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
-                document.getElementById('homePage').click();
-                customAlert(3, "Successful deleted");
-            }
-        })
+        if (typeOfPlace === 1) {
+            deleteNow.addEventListener(event, function(keyEvent) {
+                if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                    deleteRoom(selector.value);
+                }
+            });
+        } else {
+            deleteNow.addEventListener(event, function(keyEvent) {
+                if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
+                    deleteParking(selector.value);
+                }
+            });
+        }
     });
     //Apends
     //Reservation status append

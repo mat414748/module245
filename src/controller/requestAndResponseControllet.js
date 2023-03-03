@@ -44,6 +44,49 @@ function createRoom(room, floor) {
     request.onreadystatechange = requestCreateAndUpdate; 
     request.send(JSON.stringify(data));
 }
+//Reserve room
+function reserveRoom(room, date, timeFrom, timeTo) {
+    const username = ('; '+document.cookie).split(`; username=`).pop().split(';')[0];
+    //Data block
+    var data = {
+        room: room,
+        date: date,
+        timeFrom: timeFrom,
+        timeTo: timeTo,
+        user: username
+    };
+    request = new XMLHttpRequest();
+    request.open("POST", "/API/V1/ReserveRoom");
+    request.onreadystatechange = requestCreateAndUpdate; 
+    request.send(JSON.stringify(data));
+}
+//Create parking
+function createParking(spot) {
+    //Data block
+    var data = {
+        parking: spot
+    };
+    request = new XMLHttpRequest();
+    request.open("POST", "/API/V1/CreateParking");
+    request.onreadystatechange = requestCreateAndUpdate; 
+    request.send(JSON.stringify(data));
+}
+//Reserve parking
+function reserveParking(spot, date, timeFrom, timeTo) {
+    const username = ('; '+document.cookie).split(`; username=`).pop().split(';')[0];
+    //Data block
+    var data = {
+        spot: spot,
+        date: date,
+        timeFrom: timeFrom,
+        timeTo: timeTo,
+        user: username
+    };
+    request = new XMLHttpRequest();
+    request.open("POST", "/API/V1/ReserveParking");
+    request.onreadystatechange = requestCreateAndUpdate; 
+    request.send(JSON.stringify(data));
+}
 //Get response from server after PUT or POST requests
 function requestCreateAndUpdate(event) {
     if (request.readyState < 4) {
@@ -51,12 +94,19 @@ function requestCreateAndUpdate(event) {
     } 
     const answer = JSON.parse(request.responseText);
     document.getElementById('homePage').click();
-    customAlert(3, answer);
+    customAlert(3, answer.message);
 }
+
 //DELETE
-function deleteClient(id) {
+function deleteRoom(name) {
     request = new XMLHttpRequest();
-    request.open("DELETE", "/API/V1/Client/" + id);
+    request.open("DELETE", "/API/V1/Room/" + name);
+    request.onreadystatechange = requestDelete; 
+    request.send();
+}
+function deleteParking(name) {
+    request = new XMLHttpRequest();
+    request.open("DELETE", "/API/V1/Parking/" + name);
     request.onreadystatechange = requestDelete; 
     request.send();
 }
@@ -66,33 +116,142 @@ function requestDelete(event) {
         return;
     } 
     const answer = JSON.parse(request.responseText);
-    document.getElementById('clientList').click();
-    customAlert(3, answer.information);
+    document.getElementById('homePage').click();
+    customAlert(3, answer.message);
 }
+
 //GET ALL
-function getAllClients() {
+//Get all rooms
+function getAllRooms() {
     request = new XMLHttpRequest();
-    request.open("GET", "/API/V1/Clients");
-    request.onreadystatechange = requestAnswer; 
+    request.open("GET", "/API/V1/Rooms");
+    request.onreadystatechange = getForDeleteOrCreate; 
     request.send();
 }
+//Get all reserved rooms
+function getAllReservedRooms(allRooms) {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/ReservedRooms");
+    request.onreadystatechange = function() {
+        getForDeleteOrCreate(event, allRooms); 
+    };
+    request.send();
+}
+//List of reserved rooms
+function listOfReservedRooms() {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/ReservedRooms");
+    request.onreadystatechange = getForList;
+    request.send();
+}
+
+//Get all parkings
+function getAllParkings() {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/Parkings");
+    request.onreadystatechange = getForDeleteOrCreate; 
+    request.send();
+}
+//Get all reserved parkings
+function getAllReservedParkings(allParkings) {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/ReservedParkings");
+    request.onreadystatechange = function() {
+        getForDeleteOrCreate(event, allParkings); 
+    };
+    request.send();
+}
+//List of reserved parking
+function listOfReservedParkings() {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/ReservedParkings");
+    request.onreadystatechange = getForList;
+    request.send();
+}
+
 //Answer for GET all request
-function requestAnswer(event) { 
+//Get for delete and create
+function getForDeleteOrCreate(event, allRooms = 0) { 
     if (request.readyState < 4) {
         return;
     } 
-    if (JSON.parse(request.responseText).message == "Unauthorised") {
-        customAlert(1, JSON.parse(request.responseText).message);
-    } else {
-        const mainDiv = document.getElementById("mainDiv");
-        requestResult = JSON.parse(request.responseText);
-        for (let i = 0; i < requestResult.length; i++) {
-            mainDiv.appendChild(createTableLine(requestResult[i], i));
+    const answer = JSON.parse(request.responseText);
+    if (event.currentTarget.responseURL.includes("/API/V1/Rooms")) {
+        getAllReservedRooms(answer.message);
+    } else if (event.currentTarget.responseURL.includes("/API/V1/Parkings")) {
+        getAllReservedParkings(answer.message);
+    } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedRooms")) {
+        if (answer.message.includes("No reserved")) {
+            const selector = document.getElementById("selector");
+            for (let i = 0; i < allRooms.length; i++) {
+                const option = document.createElement("option");
+                option.className = optionStyle + " bg-[#025928]";
+                option.innerText = allRooms[i].room;
+                selector.appendChild(option);
+            }
+        } else {
+            const reservedPlaces = answer.message;
+            const selector = document.getElementById("selector");
+            for (let i = 0; i < allRooms.length; i++) {
+                const option = document.createElement("option");
+                for (let j = 0; j < reservedPlaces.length; j++) {
+                    if (allRooms[i].room == reservedPlaces[j].room) {
+                        option.className = optionStyle + " bg-[#590A10]";
+                        option.disabled = true;
+                        break;
+                    } else {
+                        option.className = optionStyle + " bg-[#025928]";
+                    }
+                }
+                option.innerText = allRooms[i].room;
+                selector.appendChild(option);
+            }
         }
-        if (requestResult == "No clients found") {
-            customAlert(2, requestResult);
+    } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedParkings")) {
+        if (answer.message.includes("No reserved")) {
+            const selector = document.getElementById("selector");
+            for (let i = 0; i < allRooms.length; i++) {
+                const option = document.createElement("option");
+                option.className = optionStyle + " bg-[#025928]";
+                option.innerText = allRooms[i].spot;
+                selector.appendChild(option);
+            }
+        } else {
+            const reservedPlaces = answer.message;
+            const selector = document.getElementById("selector");
+            for (let i = 0; i < allRooms.length; i++) {
+                const option = document.createElement("option");
+                for (let j = 0; j < reservedPlaces.length; j++) {
+                    if (allRooms[i].room == reservedPlaces[j].spot) {
+                        option.className = optionStyle + " bg-[#590A10]";
+                        option.disabled = true;
+                        break;
+                    } else {
+                        option.className = optionStyle + " bg-[#025928]";
+                    }
+                }
+                option.innerText = allRooms[i].room;
+                selector.appendChild(option);
+            }
         }
     }
+}
+
+//Get for list
+function getForList(event) { 
+    if (request.readyState < 4) {
+        return;
+    } 
+    const answer = JSON.parse(request.responseText);
+    const mainDiv = document.getElementById("mainDiv");
+    if (answer.message.includes("No reserved")) {
+        customAlert(2, answer.message);
+    } else {
+        for (let i = 0; i < answer.message.length; i++) {
+            mainDiv.appendChild(createTableLine(answer.message[i], i));
+        }
+    }
+    createTableLine();
 }
 //AUTHENTICATION
 function authentication(name, password) {
@@ -103,11 +262,13 @@ function authentication(name, password) {
     };
     request = new XMLHttpRequest();
     request.open("POST", "/API/V1/Authentication");
-    request.onreadystatechange = requestAuthentication; 
+    request.onreadystatechange = function() {
+        requestAuthentication(name); 
+    };
     request.send(JSON.stringify(data));
 }
 //Answer after POST authentication request
-function requestAuthentication() { 
+function requestAuthentication(name) { 
     if (request.readyState < 4) {
         return;
     } 
@@ -118,5 +279,6 @@ function requestAuthentication() {
         customAlert(3, "Succesfully login")
         typeOfHomePage = 1;
         mainPage();
+        document.cookie = "username=" + name;
     } 
 }

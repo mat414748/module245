@@ -68,7 +68,7 @@ function delete_room($name) {
    if (!$result){
       message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("An object with this name does not exist. Name: " . $name, 404);  
+      message("Room object with this name does not exist. Name: " . $name, 404);  
    } else {
       message("The room was successfully removed",200);  
    }
@@ -81,7 +81,7 @@ function delete_room_reservation($id) {
    if (!$result){
       message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("An object with this id does not exist. ID: " . $id, 404);  
+      message("Room reservation object with this id does not exist. ID: " . $id, 404);  
    } else {
       message("The room reservation was successfully removed", 200);  
    }
@@ -169,7 +169,7 @@ function delete_parking($name) {
    if (!$result){
       message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("An object with this name does not exist. Name: " . $name, 404);  
+      message("Parking with this name does not exist. Name: " . $name, 404);  
    } else {
       message("The parking place was successfully removed",200);  
    }
@@ -182,7 +182,7 @@ function delete_parking_reservation($id) {
    if (!$result){
       message("Request error", 500);  
    } else if ($result === true && $database->affected_rows == 0){
-      message("An object with this id does not exist. ID: " . $id, 404);  
+      message("Parking reservation object with this id does not exist. ID: " . $id, 404);  
    } else {
       message("The parking reservation was successfully removed",200);  
    }

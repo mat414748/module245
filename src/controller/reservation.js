@@ -1,4 +1,9 @@
 function reservation(reservationType) {
+    if (reservationType === 0) {
+        getAllRooms();
+    } else {
+        getAllParkings();
+    }
     let roomOrParkingumber = 0;
     //Create all elements with DOM
     const mainDiv = document.getElementById("mainDiv");
@@ -9,6 +14,7 @@ function reservation(reservationType) {
     const leftWindow = document.createElement("div");
     const listLabel = document.createElement("div");
     const selector = document.createElement("select");
+    selector.id = "selector";
     //Styles
     const optionStyle = "text-[40px]";
     const selectorStyle = "text-[50px] text-left";
@@ -20,35 +26,6 @@ function reservation(reservationType) {
     dummyOption.disabled = true;
     dummyOption.hidden = true;
     selector.appendChild(dummyOption);
-    //Another select
-    const selectorOptions = [
-        {Name:"A1",Status:0},
-        {Name:"A2",Status:0},
-        {Name:"A3",Status:1}
-    ];
-    selectorOptions.forEach((element) => {
-        const option = document.createElement("option");
-        if (element.Status == 0) {
-            option.className = optionStyle + " bg-[#025928]";
-            roomOrParkingumber++;
-        } else {
-            option.className = optionStyle + " bg-[#590A10]";
-        }
-        option.innerText = element.Name;
-        selector.appendChild(option);
-    });
-    //On dropdown change
-    selector.addEventListener("change", function() {
-        selectorOptions.forEach((element) => {
-            if (selector.value == element.Name && element.Status != 1) {
-                selector.className = selectorStyle + " bg-[#025928]";
-            } else if (selector.value == element.Name && element.Status == 1) {
-                selector.className = selectorStyle + " bg-[#698A85]";
-                dummyOption.selected = true;
-                customAlert(2, "This place is reserved for this time");
-            }
-        })
-    });
     //Right window
     const rightWindow = document.createElement("div");
     const freeSpace = document.createElement("div");
@@ -99,10 +76,10 @@ function reservation(reservationType) {
     listLabel.innerText = "Reservation a place";
     if (reservationType === 0) {
         welcome.innerText = "Reservation a room place";
-        freeSpace.innerText = "Free rooms now " + roomOrParkingumber + "/" + selectorOptions.length;
+        freeSpace.innerText = "Free rooms now " + roomOrParkingumber + "/" + selector.length;
     } else {
         welcome.innerText = "Reservation a parking place";
-        freeSpace.innerText = "Free parking now " + roomOrParkingumber + "/" + selectorOptions.length;
+        freeSpace.innerText = "Free parking now " + roomOrParkingumber + "/" + selector.length;
     }
     reservedStatus.innerText = " - reserved space";
     freeStatus.innerText = " - free space";
@@ -135,8 +112,11 @@ function reservation(reservationType) {
     ["click","keypress"].forEach(function(event) {
         reserveNow.addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
-                document.getElementById('homePage').click();
-                customAlert(3, "Successful reserved");
+                if (reservationType === 0) {
+                    reserveRoom(selector.value, dateLabelChoose.value, timeLabelFromTime.value, timeLabelToTime.value);
+                } else {
+                    reserveParking(selector.value, dateLabelChoose.value, timeLabelFromTime.value, timeLabelToTime.value);
+                }
             }
         })
     });
