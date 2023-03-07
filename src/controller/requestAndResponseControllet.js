@@ -98,15 +98,31 @@ function requestCreateAndUpdate(event) {
 }
 
 //DELETE
+//Delete room
 function deleteRoom(name) {
     request = new XMLHttpRequest();
     request.open("DELETE", "/API/V1/Room/" + name);
     request.onreadystatechange = requestDelete; 
     request.send();
 }
+//Delete reserved room
+function deleteReservedRoom(id) {
+    request = new XMLHttpRequest();
+    request.open("DELETE", "/API/V1/ReservedRoom/" + id);
+    request.onreadystatechange = requestDelete; 
+    request.send();
+}
+//Delete parking
 function deleteParking(name) {
     request = new XMLHttpRequest();
     request.open("DELETE", "/API/V1/Parking/" + name);
+    request.onreadystatechange = requestDelete; 
+    request.send();
+}
+//Delete reserved parking
+function deleteReservedParking(id) {
+    request = new XMLHttpRequest();
+    request.open("DELETE", "/API/V1/ReservedParking/" + id);
     request.onreadystatechange = requestDelete; 
     request.send();
 }
@@ -116,7 +132,13 @@ function requestDelete(event) {
         return;
     } 
     const answer = JSON.parse(request.responseText);
-    document.getElementById('homePage').click();
+    if (event.currentTarget.responseURL.includes("/API/V1/Room") || event.currentTarget.responseURL.includes("/API/V1/Parking")) {
+        document.getElementById('homePage').click();
+    } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedRoom")) {
+        document.getElementById('roomList').click();
+    } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedParking")) {
+        document.getElementById('parkingList').click();
+    }
     customAlert(3, answer.message);
 }
 
@@ -125,23 +147,36 @@ function requestDelete(event) {
 function getAllRooms() {
     request = new XMLHttpRequest();
     request.open("GET", "/API/V1/Rooms");
+
     request.onreadystatechange = getForDeleteOrCreate; 
     request.send();
 }
 //Get all reserved rooms
-function getAllReservedRooms(allRooms) {
+function getAllReservedRooms(allRoomsArray) {
     request = new XMLHttpRequest();
     request.open("GET", "/API/V1/ReservedRooms");
     request.onreadystatechange = function() {
-        getForDeleteOrCreate(event, allRooms); 
+        getForDeleteOrCreate(event, allRoomsArray); 
     };
     request.send();
 }
+
 //List of reserved rooms
-function listOfReservedRooms() {
+function listOfReservedRooms(altTable = 0) {
     request = new XMLHttpRequest();
     request.open("GET", "/API/V1/ReservedRooms");
-    request.onreadystatechange = getForList;
+    request.onreadystatechange = function() {
+        getForList(event, altTable);
+    }
+    request.send();
+}
+//Alt list of reserved rooms
+function altListOfReservedRooms(allRoomsArray) {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/Rooms");
+    request.onreadystatechange = function() {
+        getForList(event, 1, allRoomsArray); 
+    };
     request.send();
 }
 
@@ -161,97 +196,157 @@ function getAllReservedParkings(allParkings) {
     };
     request.send();
 }
+
 //List of reserved parking
-function listOfReservedParkings() {
+function listOfReservedParkings(altTable = 0) {
     request = new XMLHttpRequest();
     request.open("GET", "/API/V1/ReservedParkings");
-    request.onreadystatechange = getForList;
+    request.onreadystatechange = function() {
+        getForList(event, altTable);
+    }
+    request.send();
+}
+//Alt list of reserved parkings
+function altListOfReservedParkings(allRoomsArray) {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/Parkings");
+    request.onreadystatechange = function() {
+        getForList(event, 1, allRoomsArray); 
+    };
     request.send();
 }
 
 //Answer for GET all request
 //Get for delete and create
-function getForDeleteOrCreate(event, allRooms = 0) { 
+function getForDeleteOrCreate(event, allRoomsArray = 0) { 
     if (request.readyState < 4) {
         return;
     } 
     const answer = JSON.parse(request.responseText);
+    const selector = document.getElementById("selector");
+    const dateChoose = document.getElementById("dateChoose");
+    const fromTime = document.getElementById("fromTime");
+    const toTime = document.getElementById("toTime");
+    const reservedPlaces = answer.message;
+    const actualTime = parseInt(new Date().toJSON().slice(11, 13)) * 3600 + parseInt(new Date().toJSON().slice(14, 16)) * 60 + 3600;
+    const actualDate = new Date().toJSON().slice(0, 10);
     if (event.currentTarget.responseURL.includes("/API/V1/Rooms")) {
         getAllReservedRooms(answer.message);
     } else if (event.currentTarget.responseURL.includes("/API/V1/Parkings")) {
         getAllReservedParkings(answer.message);
+    //Room reservation
     } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedRooms")) {
+        //If reservation don't exist 
         if (answer.message.includes("No reserved")) {
-            const selector = document.getElementById("selector");
-            for (let i = 0; i < allRooms.length; i++) {
+            for (let i = 0; i < allRoomsArray.length; i++) {
                 const option = document.createElement("option");
                 option.className = optionStyle + " bg-[#025928]";
-                option.innerText = allRooms[i].room;
+                option.innerText = allRoomsArray[i].room;
                 selector.appendChild(option);
             }
         } else {
-            const reservedPlaces = answer.message;
-            const selector = document.getElementById("selector");
-            for (let i = 0; i < allRooms.length; i++) {
-                const option = document.createElement("option");
-                for (let j = 0; j < reservedPlaces.length; j++) {
-                    if (allRooms[i].room == reservedPlaces[j].room) {
-                        option.className = optionStyle + " bg-[#590A10]";
-                        option.disabled = true;
-                        break;
-                    } else {
-                        option.className = optionStyle + " bg-[#025928]";
+            selector.addEventListener("changeAccess", function() { 
+                selector.innerHTML = "";
+                for (let i = 0; i < allRoomsArray.length; i++) {
+                    const option = document.createElement("option");
+                    for (let j = 0; j < reservedPlaces.length; j++) {
+                        if (allRoomsArray[i].room == reservedPlaces[j].room) {
+                            if (dateChoose.value == reservedPlaces[j].date) {
+                                if (fromTime.value < reservedPlaces[j].res_from.slice(0, 5) && toTime.value < reservedPlaces[j].res_from.slice(0, 5) || fromTime.value > reservedPlaces[j].res_till.slice(0, 5) && toTime.value > reservedPlaces[j].res_till.slice(0, 5)) {
+                                    option.className = optionStyle + " bg-[#025928]"
+                                    roomOrParkingumber ++;
+                                } else {
+                                    option.className = optionStyle + " bg-[#590A10]";
+                                    option.disabled = true;
+                                }
+                            } else {
+                                option.className = optionStyle + " bg-[#025928]"
+                                roomOrParkingumber ++;
+                            }
+                        } 
                     }
+                    if (option.className == "") {
+                        option.className = optionStyle + " bg-[#025928]"
+                        roomOrParkingumber ++;
+                    }
+                    option.innerText = allRoomsArray[i].room;
+                    selector.appendChild(option);
                 }
-                option.innerText = allRooms[i].room;
-                selector.appendChild(option);
-            }
+            });
+            selector.dispatchEvent(new Event("changeAccess"));
         }
+        document.getElementById("freeSpace").innerText = "Free rooms now " + roomOrParkingumber + "/" + String((parseInt(selector.length) - 1));
+    //Parking reservation
     } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedParkings")) {
         if (answer.message.includes("No reserved")) {
-            const selector = document.getElementById("selector");
-            for (let i = 0; i < allRooms.length; i++) {
+            for (let i = 0; i < allRoomsArray.length; i++) {
                 const option = document.createElement("option");
                 option.className = optionStyle + " bg-[#025928]";
-                option.innerText = allRooms[i].spot;
+                option.innerText = allRoomsArray[i].spot;
                 selector.appendChild(option);
             }
         } else {
-            const reservedPlaces = answer.message;
-            const selector = document.getElementById("selector");
-            for (let i = 0; i < allRooms.length; i++) {
-                const option = document.createElement("option");
-                for (let j = 0; j < reservedPlaces.length; j++) {
-                    if (allRooms[i].room == reservedPlaces[j].spot) {
-                        option.className = optionStyle + " bg-[#590A10]";
-                        option.disabled = true;
-                        break;
-                    } else {
-                        option.className = optionStyle + " bg-[#025928]";
+            selector.addEventListener("changeAccess", function() { 
+                selector.innerHTML = "";
+                for (let i = 0; i < allRoomsArray.length; i++) {
+                    const option = document.createElement("option");
+                    for (let j = 0; j < reservedPlaces.length; j++) {
+                        if (allRoomsArray[i].spot == reservedPlaces[j].spot) {
+                            if (dateChoose.value == reservedPlaces[j].date) {
+                                if (fromTime.value < reservedPlaces[j].res_from.slice(0, 5) && toTime.value < reservedPlaces[j].res_from.slice(0, 5) || fromTime.value > reservedPlaces[j].res_till.slice(0, 5) && toTime.value > reservedPlaces[j].res_till.slice(0, 5)) {
+                                    option.className = optionStyle + " bg-[#025928]"
+                                    roomOrParkingumber ++;
+                                } else {
+                                    option.className = optionStyle + " bg-[#590A10]";
+                                    option.disabled = true;
+                                }
+                            } else {
+                                option.className = optionStyle + " bg-[#025928]"
+                                roomOrParkingumber ++;
+                            }
+                        } 
                     }
+                    if (option.className == "") {
+                        option.className = optionStyle + " bg-[#025928]"
+                        roomOrParkingumber ++;
+                    }
+                    option.innerText = allRoomsArray[i].room;
+                    selector.appendChild(option);
                 }
-                option.innerText = allRooms[i].room;
-                selector.appendChild(option);
-            }
+            });
+            selector.dispatchEvent(new Event("changeAccess"));
         }
+        document.getElementById("freeSpace").innerText = "Free parkings now " + roomOrParkingumber + "/" + String((parseInt(selector.length) - 1));
     }
 }
 
 //Get for list
-function getForList(event) { 
+function getForList(event, altTable, listArray = 0) { 
     if (request.readyState < 4) {
         return;
     } 
     const answer = JSON.parse(request.responseText);
     const mainDiv = document.getElementById("mainDiv");
-    if (answer.message.includes("No reserved")) {
-        customAlert(2, answer.message);
+    if (altTable === 0) {
+        if (answer.message.includes("No reserved")) {
+            customAlert(2, answer.message);
+        } else {
+            for (let i = 0; i < answer.message.length; i++) {
+                mainDiv.appendChild(createTableLine(answer.message[i], i));
+            }
+        }
     } else {
-        for (let i = 0; i < answer.message.length; i++) {
-            mainDiv.appendChild(createTableLine(answer.message[i], i));
+        if (event.currentTarget.responseURL.includes("/API/V1/ReservedRooms")) {
+            altListOfReservedRooms(answer.message);
+        } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedParkings")) {
+            altListOfReservedParkings(answer.message);
+        } else if (event.currentTarget.responseURL.includes("/API/V1/Rooms") || event.currentTarget.responseURL.includes("/API/V1/Parkings")) {
+            for (let i = 0; i < answer.message.length; i++) {
+                mainDiv.appendChild(createTableLine(listArray[i], i, answer.message[i], listArray));
+            }
         }
     }
-    createTableLine();
+    //createTableLine();
 }
 //AUTHENTICATION
 function authentication(name, password) {
@@ -280,5 +375,59 @@ function requestAuthentication(name) {
         typeOfHomePage = 1;
         mainPage();
         document.cookie = "username=" + name;
+    } 
+}
+
+//Annihilator
+//Get all
+function fullClearReservedRooms() {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/ReservedRooms");
+    request.onreadystatechange = deleteExpiredData;
+    request.send();
+}
+function fullClearReservedParkings() {
+    request = new XMLHttpRequest();
+    request.open("GET", "/API/V1/ReservedParkings");
+    request.onreadystatechange = deleteExpiredData;
+    request.send();
+}
+//Delete all
+function clearRooms(id) {
+    request = new XMLHttpRequest();
+    request.open("DELETE", "/API/V1/ReservedRoom/" + id);
+    request.onreadystatechange = console.log("Cleared room"); 
+    request.send();
+}
+function clearParkings(id) {
+    request = new XMLHttpRequest();
+    request.open("DELETE", "/API/V1/ReservedParking/" + id);
+    request.onreadystatechange = console.log("Cleared parking"); 
+    request.send();
+}
+
+function deleteExpiredData(event) {
+    if (request.readyState < 4) {
+        return;
+    } 
+    const answer = JSON.parse(request.responseText);
+    //Actual time
+    const actualTime = parseInt(new Date().toJSON().slice(11, 13)) * 3600 + parseInt(new Date().toJSON().slice(14, 16)) * 60 + 3600;
+    for (let i = 0; i < answer.message.length; i++) {
+        let deadLine = 1000000000000000;
+        try {
+            deadLine = parseInt(answer.message[i].res_till.slice(0, 2)) * 3600 + parseInt(answer.message[i].res_till.slice(3, 5)) * 60;
+        } catch (pizdec) {
+        }
+        if (answer.message[i].date < new Date().toJSON().slice(0, 10) || deadLine < actualTime && answer.message[i].date == new Date().toJSON().slice(0, 10)) {
+            if (event.currentTarget.responseURL.includes("/API/V1/ReservedRooms")) {
+                clearRooms(answer.message[i].id);
+            } else {
+                clearParkings(answer.message[i].id);
+            }
+        }
+    } 
+    if (event.currentTarget.responseURL.includes("/API/V1/ReservedRooms")) {
+        fullClearReservedParkings();
     } 
 }

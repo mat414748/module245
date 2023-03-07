@@ -1,10 +1,12 @@
+let roomOrParkingumber = 0;
 function reservation(reservationType) {
+    //Actual time
+    const actualTime = parseInt(new Date().toJSON().slice(11, 13)) * 3600 + parseInt(new Date().toJSON().slice(14, 16)) * 60 + 3600;
     if (reservationType === 0) {
         getAllRooms();
     } else {
         getAllParkings();
     }
-    let roomOrParkingumber = 0;
     //Create all elements with DOM
     const mainDiv = document.getElementById("mainDiv");
     mainDiv.innerHTML = '';
@@ -29,22 +31,27 @@ function reservation(reservationType) {
     //Right window
     const rightWindow = document.createElement("div");
     const freeSpace = document.createElement("div");
+    freeSpace.id = "freeSpace";
     //Date
     const dateLabel = document.createElement("div");
     const dateLabelChoose = document.createElement("input");
+    dateLabelChoose.id = "dateChoose";
     dateLabelChoose.type = "date";
     dateLabelChoose.value = new Date().toJSON().slice(0, 10);
     dateLabelChoose.min = new Date().toJSON().slice(0, 10);
+    console.log(new Date().toJSON());
     //Time
     const timeLabel = document.createElement("div");
     const timeLabelFrom = document.createElement("div");
     const timeLabelFromTime = document.createElement("input");
+    timeLabelFromTime.id = "fromTime";
     timeLabelFromTime.type = "time";
     timeLabelFromTime.min = "08:00";
     timeLabelFromTime.max = "17:00";
-    timeLabelFromTime.value = "08:00";
+    timeLabelFromTime.value = String(new Date(actualTime * 1000).toJSON().slice(11, 16));
     const timeLabelTo = document.createElement("div");
     const timeLabelToTime = document.createElement("input");
+    timeLabelToTime.id = "toTime";
     timeLabelToTime.type = "time";
     timeLabelToTime.min = "09:00";
     timeLabelToTime.max = "18:00";
@@ -65,22 +72,30 @@ function reservation(reservationType) {
             customAlert(2, "Start reserving time can't be earlier than 8:00 or later than 17:00");
             timeLabelFromTime.value = "08:00";
         }
+        let minTime = parseInt(timeLabelFromTime.value.slice(0, 2)) * 3600 + parseInt(timeLabelFromTime.value.slice(3, 5)) * 60;
+        console.log(dateLabelChoose.value + " " + new Date().toJSON().slice(0, 10) + " " + minTime + " " + actualTime);
+        if (dateLabelChoose.value == new Date().toJSON().slice(0, 10) && minTime < actualTime) {
+            customAlert(2, "Time reservation can't be lower than actual for this day");
+            timeLabelFromTime.value = String(new Date(actualTime * 1000).toJSON().slice(11, 16));
+        }
+        selector.dispatchEvent(new Event("changeAccess"));
     });
     timeLabelToTime.addEventListener("change", function() {
         if (!timeLabelToTime.checkValidity()) {
             customAlert(2, "End reserving time can't be earlier than 9:00 or later than 18:00");
             timeLabelToTime.value = "18:00";
         }
+        if (timeLabelFromTime.value > timeLabelToTime.value) {
+            customAlert(2, "End time can't be bigger than start time");
+            timeLabelToTime.value = "18:00";
+        }
+        selector.dispatchEvent(new Event("changeAccess"));
+    });
+    dateLabelChoose.addEventListener("change", function() {
+        selector.dispatchEvent(new Event("changeAccess"));
     });
     //Text
     listLabel.innerText = "Reservation a place";
-    if (reservationType === 0) {
-        welcome.innerText = "Reservation a room place";
-        freeSpace.innerText = "Free rooms now " + roomOrParkingumber + "/" + selector.length;
-    } else {
-        welcome.innerText = "Reservation a parking place";
-        freeSpace.innerText = "Free parking now " + roomOrParkingumber + "/" + selector.length;
-    }
     reservedStatus.innerText = " - reserved space";
     freeStatus.innerText = " - free space";
     dateLabel.innerText = "Choose a data and time";
@@ -112,10 +127,14 @@ function reservation(reservationType) {
     ["click","keypress"].forEach(function(event) {
         reserveNow.addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
-                if (reservationType === 0) {
-                    reserveRoom(selector.value, dateLabelChoose.value, timeLabelFromTime.value, timeLabelToTime.value);
+                if (selector.value === "List of places") {
+                    customAlert(2, "Please choose a place");
                 } else {
-                    reserveParking(selector.value, dateLabelChoose.value, timeLabelFromTime.value, timeLabelToTime.value);
+                    if (reservationType === 0) {
+                        reserveRoom(selector.value, dateLabelChoose.value, timeLabelFromTime.value, timeLabelToTime.value);
+                    } else {
+                        reserveParking(selector.value, dateLabelChoose.value, timeLabelFromTime.value, timeLabelToTime.value);
+                    }
                 }
             }
         })
