@@ -23,6 +23,7 @@ function reserve_room($room, $date, $time_from, $time_to, $user) {
    } else if ($result === true && $database->affected_rows == 0){
       message("Room with this name doesn't exist. Name: " . $room, 404);  
    } else {
+      send_mail("Room reservation", "The room <b>$room</b> was successfully reserved for the time from <b>$time_from-$time_to</b> and the date <b>$date</b> from user <b>$user</b>", "The room $room was successfully reserved for the time from $time_from-$time_to and the date $date from user $user");
       message("Successfully reserved room",201);
    }
 }
@@ -75,7 +76,7 @@ function delete_room($name) {
 }
 
 //Delete reservation of room
-function delete_room_reservation($id) {
+function delete_room_reservation($id, $room, $date, $time_from, $time_to, $user) {
    global $database;
    $result = $database->query("DELETE FROM reserved_rooms WHERE id = '$id'");
    if (!$result){
@@ -83,24 +84,8 @@ function delete_room_reservation($id) {
    } else if ($result === true && $database->affected_rows == 0){
       message("Room reservation object with this id does not exist. ID: " . $id, 404);  
    } else {
+      send_mail("Cancellation of a room reservation", "The reservation of room <b>$room</b> has been cancelled for the time from <b>$time_from-$time_to</b> and the date <b>$date</b> from user <b>$user</b>", "The reservation of room $room has been cancelled for the time from $time_from-$time_to and the date $date from user $user");
       message("The room reservation was successfully removed", 200);  
-   }
-}
-
-//Update room
-function update_product($id, $sku, $active, $id_category, $name, $image, $description, $price, $stock) {
-   global $database;
-   if ($id_category == "NULL") {
-      $result = $database->query("UPDATE product SET sku = '$sku', active = '$active', id_category = NULL, name = '$name', image = '$image', description = '$description', price = '$price', stock = '$stock' WHERE product_id = $id");
-   } else {
-      $result = $database->query("UPDATE product SET sku = '$sku', active = '$active', id_category = '$id_category', name = '$name', image = '$image', description = '$description', price = '$price', stock = '$stock' WHERE product_id = $id");
-   }
-   if (!$result){
-      message("Update error", 500);  
-   } else if ($result === true && $database->affected_rows == 0){
-      message("No changes have been made. Possible reasons:1.The product is not found 2.Identical product already exists", 400);  
-   } else {
-      message("The product has been successfully updated", 200); 
    }
 }
 
@@ -125,6 +110,7 @@ function reserve_parking($spot, $date, $time_from, $time_to, $user) {
    } else if ($result === true && $database->affected_rows == 0){
       message("Parking place with this name doesn't exist. Name: " . $spot, 404);  
    } else {
+      send_mail("Parking reservation", "The parking <b>$spot</b> was successfully reserved for the time from $time_from-$time_to and the date $date", "The spot $spot was successfully reserved for the time from $time_from-$time_to and the date $date");
       message("Successfully reserved spot", 201);
    }
 }
@@ -176,7 +162,7 @@ function delete_parking($name) {
 }
 
 //Delete reservation of parking
-function delete_parking_reservation($id) {
+function delete_parking_reservation($id, $spot, $date, $time_from, $time_to, $user) {
    global $database;
    $result = $database->query("DELETE FROM reserved_parking WHERE id = '$id'");
    if (!$result){
@@ -184,6 +170,7 @@ function delete_parking_reservation($id) {
    } else if ($result === true && $database->affected_rows == 0){
       message("Parking reservation object with this id does not exist. ID: " . $id, 404);  
    } else {
+      send_mail("Cancellation of a spot reservation", "The reservation of spot <b>$spot</b> has been cancelled for the time from <b>$time_from-$time_to</b> and the date <b>$date</b> from user <b>$user</b>", "The reservation of spot $spot has been cancelled for the time from $time_from-$time_to and the date $date from user $user");
       message("The parking reservation was successfully removed",200);  
    }
 }

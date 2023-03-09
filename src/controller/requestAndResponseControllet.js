@@ -1,41 +1,12 @@
 //Result of each request
 let requestResult = 0;
-//PUT 
-function updateClient(id, name, surname, sex, email, creditRaiting, street, postcode, city, billingAdress, privatePhonenumber, companyPhonenumber) {
-    //Data block
-    var data = {
-        Name: name,
-        Surname: surname,
-        Sex: sex,
-        email: email,
-        CreditRaiting: creditRaiting,
-        Street: street,
-        Postcode: postcode,
-        City: city,
-        billingAddress: billingAdress,
-        phonenumberCompany: privatePhonenumber,
-        phonenumberPrivate: companyPhonenumber,
-        joinDate: Date.now(),
-        VIP: 1,
-        highFrequency: 1,
-        creditRating: 1,
-        debt: 1,
-        creditcard: 4444555566667777,
-        bill: "5",
-        prepayment: 0
-    };
-    request = new XMLHttpRequest();
-    request.open("PUT", "/API/V1/Client/" + id);
-    request.onreadystatechange = requestCreateAndUpdate; 
-    request.send(JSON.stringify(data));
-}
 
 //POST
 //Create room
 function createRoom(room, floor) {
     //Data block
     const newFloor = parseInt(floor);
-    var data = {
+    const data = {
         room: room,
         floor: newFloor
     };
@@ -48,7 +19,7 @@ function createRoom(room, floor) {
 function reserveRoom(room, date, timeFrom, timeTo) {
     const username = ('; '+document.cookie).split(`; username=`).pop().split(';')[0];
     //Data block
-    var data = {
+    const data = {
         room: room,
         date: date,
         timeFrom: timeFrom,
@@ -63,7 +34,7 @@ function reserveRoom(room, date, timeFrom, timeTo) {
 //Create parking
 function createParking(spot) {
     //Data block
-    var data = {
+    const data = {
         parking: spot
     };
     request = new XMLHttpRequest();
@@ -75,7 +46,7 @@ function createParking(spot) {
 function reserveParking(spot, date, timeFrom, timeTo) {
     const username = ('; '+document.cookie).split(`; username=`).pop().split(';')[0];
     //Data block
-    var data = {
+    const data = {
         spot: spot,
         date: date,
         timeFrom: timeFrom,
@@ -92,7 +63,8 @@ function requestCreateAndUpdate(event) {
     if (request.readyState < 4) {
         return;
     } 
-    const answer = JSON.parse(request.responseText);
+    const requestAnswer = request.responseText.split(/\r?\n/);
+    const answer = JSON.parse(requestAnswer[requestAnswer.length - 1]);
     document.getElementById('homePage').click();
     customAlert(3, answer.message);
 }
@@ -106,11 +78,18 @@ function deleteRoom(name) {
     request.send();
 }
 //Delete reserved room
-function deleteReservedRoom(id) {
+function deleteReservedRoom(roomData) {
+    const data = {
+        room: roomData.room,
+        date: roomData.date,
+        timeFrom: roomData.res_from,
+        timeTo: roomData.res_till,
+        user: roomData.user
+    };
     request = new XMLHttpRequest();
-    request.open("DELETE", "/API/V1/ReservedRoom/" + id);
+    request.open("DELETE", "/API/V1/ReservedRoom/" + roomData.id);
     request.onreadystatechange = requestDelete; 
-    request.send();
+    request.send(JSON.stringify(data));
 }
 //Delete parking
 function deleteParking(name) {
@@ -120,9 +99,16 @@ function deleteParking(name) {
     request.send();
 }
 //Delete reserved parking
-function deleteReservedParking(id) {
+function deleteReservedParking(spotData) {
+    const data = {
+        room: spotData.spot,
+        date: spotData.date,
+        timeFrom: spotData.res_from,
+        timeTo: spotData.res_till,
+        user: spotData.user
+    };
     request = new XMLHttpRequest();
-    request.open("DELETE", "/API/V1/ReservedParking/" + id);
+    request.open("DELETE", "/API/V1/ReservedParking/" + spotData.id);
     request.onreadystatechange = requestDelete; 
     request.send();
 }
@@ -131,7 +117,8 @@ function requestDelete(event) {
     if (request.readyState < 4) {
         return;
     } 
-    const answer = JSON.parse(request.responseText);
+    const requestAnswer = request.responseText.split(/\r?\n/);
+    const answer = JSON.parse(requestAnswer[requestAnswer.length - 1]);
     if (event.currentTarget.responseURL.includes("/API/V1/Room") || event.currentTarget.responseURL.includes("/API/V1/Parking")) {
         document.getElementById('homePage').click();
     } else if (event.currentTarget.responseURL.includes("/API/V1/ReservedRoom")) {
@@ -351,7 +338,7 @@ function getForList(event, altTable, listArray = 0) {
 //AUTHENTICATION
 function authentication(name, password) {
     //Data block
-    var data = {
+    const data = {
             username: name,
             password: password
     };

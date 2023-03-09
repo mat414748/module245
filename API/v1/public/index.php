@@ -10,7 +10,10 @@ require __DIR__ . "/../vendor/autoload.php";
 require_once "model/db_functions.php";
 require "config/config.php";
 require "controller/anti_sql_injection.php";
-//require "controller/send_mail.php";
+//Mail requirement
+require 'E-mail/PHPMailer/src/Exception.php';
+require 'E-mail/PHPMailer/src/PHPMailer.php';
+require 'E-mail/PHPMailer/src/SMTP.php';
 header("Content-Type: application/json");
 //Reserving App version 1.0
 $app = AppFactory::create();    
@@ -18,24 +21,24 @@ $app->setBasePath("/API/V1");
 /*
  E-mail Sender
 */
-function send_mail() {
+function send_mail($subject, $body, $alt_body) {
     $mail = new PHPMailer(true);
-    // Settings
-    $mail->IsSMTP();
-    $mail->CharSet = 'UTF-8';
-    $mail->Host       = "mail.example.com";    // SMTP server example
-    $mail->SMTPDebug  = 0;                     // enables SMTP debug information (for testing)
-    $mail->SMTPAuth   = true;                  // enable SMTP authentication
-    $mail->Port       = 25;                    // set the SMTP port for the GMAIL server
-    $mail->Username   = "username";            // SMTP account username example
-    $mail->Password   = "password";            // SMTP account password example
+    //Server settings
+    $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
+    $mail->isSMTP();                                            //Send using SMTP
+    $mail->Host       = 'smtp.gmail.com';                     //Set the SMTP server to send through
+    $mail->SMTPAuth   = true;                                   //Enable SMTP authentication
+    $mail->Username   = 'mat1128000@gmail.com';                     //SMTP username
+    $mail->Password   = 'wwuulnhwwwlwpopa';                               //SMTP password
+    $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;            //Enable implicit TLS encryption
+    $mail->Port       = 465;  
     // Content
     $mail->setFrom('domain@example.com');   
     $mail->addAddress('matvej.levantsou@ict.csbe.ch');
     $mail->isHTML(true);                       // Set email format to HTML
-    $mail->Subject = 'Here is the subject';
-    $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
-    $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';    
+    $mail->Subject = $subject;
+    $mail->Body    = $body;
+    $mail->AltBody = $alt_body;    
     $mail->send();
 }
 /*
@@ -63,6 +66,41 @@ function put_check($name, $object, $request_data) {
 
 //Authentication
 $app->post("/Authentication", function (Request $request, Response $response, $args) {
+
+    $request_body = file_get_contents("php://input");
+
+    $request_data = json_decode($request_body, true);
+
+    //If the parameters are not set
+    if (!isset($request_data["username"]) || empty($request_data["username"])) {
+        message("Please provide a \"username\" field.", 400);
+    } 
+    if (!isset($request_data["password"]) || empty($request_data["password"])) {
+        message("Please provide a \"password\" field.", 400);
+    }
+
+    //LDAP connection data
+    $ldap_UID = $request_data["username"];
+    $ldap_password = $request_data["password"];
+    //LDAP connection
+    $ldap_dn = "cn=$ldap_UID,ou=Benutzer,ou=M241,dc=M241,dc=local";
+    $ldap_con = ldap_connect("ldap://192.168.120.10");
+    ldap_set_option($ldap_con, LDAP_OPT_PROTOCOL_VERSION, 3);
+    //LDAP connection check password
+    if (@ldap_bind($ldap_con, $ldap_dn, $ldap_password)) {
+        $token = Token::create($ldap_UID, $ldap_password, time() + 3600, "Token");
+        setcookie("token", $token, time() + 3600, "/");
+        message("Token created!", 200);
+    }
+    else {
+        message("false login credentials", 400);
+    }
+    return $response;
+});
+
+//OLD Authentication
+/*
+$app->post("/Authentication", function (Request $request, Response $response, $args) {
     global $api_username;
     global $api_password;
     $request_body = file_get_contents("php://input");
@@ -81,12 +119,12 @@ $app->post("/Authentication", function (Request $request, Response $response, $a
     if ($username != $api_username || $password != $api_password) {
         message("Invalid credentials", 401);
     }
-    send_mail();
     $token = Token::create($username, $password, time() + 3600, "m245Token");
     setcookie("token", $token, time() + 3600, "/");
     message("Token created!", 200);
     return $response;
 });
+*/
 
 //Rooms
 //Create a room
@@ -184,7 +222,29 @@ $app->delete("/ReservedRoom/{id}", function (Request $request, Response $respons
     if (!isset($id) || empty($id)) {
         message("False id", 400);
     }
-    delete_room_reservation($id);
+    //Get request content
+    $request_body = file_get_contents("php://input");
+    $request_data = json_decode($request_body, true);
+    //If the parameters are not set
+    if (!isset($request_data["room"]) || empty($request_data["room"])) {
+        message("Please choose a \"room\".", 400);
+    } 
+    if (!isset($request_data["date"]) || empty($request_data["date"])) { 
+        message("Please choose a \"date\".", 400);
+    }
+    if (!isset($request_data["timeFrom"]) || empty($request_data["timeFrom"])) { 
+        message("Please choose a \"time from\".", 400);
+    }
+    if (!isset($request_data["timeTo"]) || empty($request_data["timeTo"])) {
+        message("Please choose a \"time to\".", 400);
+    }
+    //Anti injection
+    $room = anti_injection($request_data["room"]);
+    $date = anti_injection($request_data["date"]);
+    $time_from = anti_injection($request_data["timeFrom"]);
+    $time_to = anti_injection($request_data["timeTo"]);
+    $user = anti_injection($request_data["user"]);
+    delete_room_reservation($id, $room, $date, $time_from, $time_to, $user);
     return $response;
 });
 
@@ -280,7 +340,29 @@ $app->delete("/ReservedParking/{id}", function (Request $request, Response $resp
     if (!isset($id) || empty($id)) {
         message("False id", 400);
     }
-    delete_parking_reservation($id);
+    //Get request content
+    $request_body = file_get_contents("php://input");
+    $request_data = json_decode($request_body, true);
+    //If the parameters are not set
+    if (!isset($request_data["spot"]) || empty($request_data["spot"])) {
+        message("Please choose a \"spot\".", 400);
+    } 
+    if (!isset($request_data["date"]) || empty($request_data["date"])) { 
+        message("Please choose a \"date\".", 400);
+    }
+    if (!isset($request_data["timeFrom"]) || empty($request_data["timeFrom"])) { 
+        message("Please choose a \"time from\".", 400);
+    }
+    if (!isset($request_data["timeTo"]) || empty($request_data["timeTo"])) {
+        message("Please choose a \"time to\".", 400);
+    }
+    //Anti injection
+    $spot = anti_injection($request_data["spot"]);
+    $date = anti_injection($request_data["date"]);
+    $time_from = anti_injection($request_data["timeFrom"]);
+    $time_to = anti_injection($request_data["timeTo"]);
+    $user = anti_injection($request_data["user"]);
+    delete_parking_reservation($id, $spot, $date, $time_from, $time_to, $user);
     return $response;
 });
 
