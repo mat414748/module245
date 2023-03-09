@@ -3,14 +3,41 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Factory\AppFactory;
 use ReallySimpleJWT\Token;
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\SMTP;
+use PHPMailer\PHPMailer\Exception;
 require __DIR__ . "/../vendor/autoload.php";
 require_once "model/db_functions.php";
 require "config/config.php";
 require "controller/anti_sql_injection.php";
+//require "controller/send_mail.php";
 header("Content-Type: application/json");
 //Reserving App version 1.0
 $app = AppFactory::create();    
 $app->setBasePath("/API/V1"); 
+/*
+ E-mail Sender
+*/
+function send_mail() {
+    $mail = new PHPMailer(true);
+    // Settings
+    $mail->IsSMTP();
+    $mail->CharSet = 'UTF-8';
+    $mail->Host       = "mail.example.com";    // SMTP server example
+    $mail->SMTPDebug  = 0;                     // enables SMTP debug information (for testing)
+    $mail->SMTPAuth   = true;                  // enable SMTP authentication
+    $mail->Port       = 25;                    // set the SMTP port for the GMAIL server
+    $mail->Username   = "username";            // SMTP account username example
+    $mail->Password   = "password";            // SMTP account password example
+    // Content
+    $mail->setFrom('domain@example.com');   
+    $mail->addAddress('matvej.levantsou@ict.csbe.ch');
+    $mail->isHTML(true);                       // Set email format to HTML
+    $mail->Subject = 'Here is the subject';
+    $mail->Body    = 'This is the HTML message body <b>in bold!</b>';
+    $mail->AltBody = 'This is the body in plain text for non-HTML mail clients';    
+    $mail->send();
+}
 /*
  Returns an error to the client with the given message and status code.
  This will immediately return the response and end all scripts.
@@ -54,7 +81,7 @@ $app->post("/Authentication", function (Request $request, Response $response, $a
     if ($username != $api_username || $password != $api_password) {
         message("Invalid credentials", 401);
     }
-
+    send_mail();
     $token = Token::create($username, $password, time() + 3600, "m245Token");
     setcookie("token", $token, time() + 3600, "/");
     message("Token created!", 200);
