@@ -21,7 +21,7 @@ $app->setBasePath("/API/V1");
 /*
  E-mail Sender
 */
-function send_mail($subject, $body, $alt_body) {
+function send_mail($subject, $body, $alt_body, $user_email = 0) {
     $mail = new PHPMailer(true);
     //Server settings
     $mail->SMTPDebug = SMTP::DEBUG_SERVER;                      //Enable verbose debug output
@@ -35,6 +35,9 @@ function send_mail($subject, $body, $alt_body) {
     // Content
     $mail->setFrom('domain@example.com');   
     $mail->addAddress('matvej.levantsou@ict.csbe.ch');
+    if ($user_email !== 0) {
+        $mail->addAddress($user_email);
+    }
     $mail->isHTML(true);                       // Set email format to HTML
     $mail->Subject = $subject;
     $mail->Body    = $body;
@@ -66,41 +69,6 @@ function put_check($name, $object, $request_data) {
 
 //Authentication
 $app->post("/Authentication", function (Request $request, Response $response, $args) {
-
-    $request_body = file_get_contents("php://input");
-
-    $request_data = json_decode($request_body, true);
-
-    //If the parameters are not set
-    if (!isset($request_data["username"]) || empty($request_data["username"])) {
-        message("Please provide a \"username\" field.", 400);
-    } 
-    if (!isset($request_data["password"]) || empty($request_data["password"])) {
-        message("Please provide a \"password\" field.", 400);
-    }
-
-    //LDAP connection data
-    $ldap_UID = $request_data["username"];
-    $ldap_password = $request_data["password"];
-    //LDAP connection
-    $ldap_dn = "cn=$ldap_UID,ou=Benutzer,ou=M241,dc=M241,dc=local";
-    $ldap_con = ldap_connect("ldap://192.168.120.10");
-    ldap_set_option($ldap_con, LDAP_OPT_PROTOCOL_VERSION, 3);
-    //LDAP connection check password
-    if (@ldap_bind($ldap_con, $ldap_dn, $ldap_password)) {
-        $token = Token::create($ldap_UID, $ldap_password, time() + 3600, "Token");
-        setcookie("token", $token, time() + 3600, "/");
-        message("Token created!", 200);
-    }
-    else {
-        message("false login credentials", 400);
-    }
-    return $response;
-});
-
-//OLD Authentication
-/*
-$app->post("/Authentication", function (Request $request, Response $response, $args) {
     global $api_username;
     global $api_password;
     $request_body = file_get_contents("php://input");
@@ -124,7 +92,6 @@ $app->post("/Authentication", function (Request $request, Response $response, $a
     message("Token created!", 200);
     return $response;
 });
-*/
 
 //Rooms
 //Create a room

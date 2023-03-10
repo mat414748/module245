@@ -1,5 +1,8 @@
 let typeOfHomePage = 0;
 let activeList = 0;
+//Admin or User
+let userType = 0;
+let userLoginName = 0;
 //Assigns a function to each button on the panel
 function setEvent() {
     //Homepage function
@@ -7,7 +10,7 @@ function setEvent() {
         document.getElementById("homePage").addEventListener(event, function(keyEvent) {
             if (keyEvent.key === "Enter" || keyEvent instanceof PointerEvent) {
                 if (document.cookie.indexOf('token=') !== -1) {
-                    console.log("COOOOCKIEEES");
+                    userType = "admin";
                     typeOfHomePage = 1;
                 } 
                 mainPage();
@@ -51,13 +54,13 @@ function mainPage() {
     const parkingSpaceList = document.createElement("div");
     const adminFunctions = document.createElement("div");
     //Design for all elements
-    welcome.className = "text-[70px] font-bold text-[#A88F15]";
-    welcomeText.className = "text-[40px] font-bold w-[55%] m-auto";
-    subText.className = "text-[25px] italic w-[30%] m-auto mt-5 mb-5";
+    welcome.className = "text-[70px] max-[768px]:text-[40px] max-[400px]:text-[30px] font-bold text-[#A88F15]";
+    welcomeText.className = "text-[40px] max-[768px]:text-[20px] max-[400px]:text-[15px] font-bold w-[55%] max-[400px]:w-[60%] m-auto";
+    subText.className = "text-[25px] max-[768px]:text-[20px] max-[400px]:text-[15px] italic w-[30%] max-[400px]:w-[50%] m-auto mt-5 mb-5";
     mainPageFunctions.className = "flex flex-row";
     mainDiv.className = "text-center mt-5";
-    adminFunctions.className = "text-[40px] bg-[#8C7B5A] text-white border-4 border-black mt-5 pb-2 m-auto cursor-pointer focus:bg-[#C4AD7E] hover:bg-[#C4AD7E]";
-    const buttonDesign = "text-[50px] border-4 border-black rounded-lg mt-5 pb-2 m-auto w-[30rem] cursor-pointer text-white";
+    adminFunctions.className = "text-[40px] max-[768px]:text-[20px] max-[400px]:text-[15px] bg-[#8C7B5A] text-white border-4 border-black mt-5 pb-2 m-auto cursor-pointer focus:bg-[#C4AD7E] hover:bg-[#C4AD7E]";
+    const buttonDesign = "text-[50px] max-[768px]:text-[20px] max-[400px]:text-[15px] border-4 border-black rounded-lg mt-5 pb-2 m-auto w-[30rem] max-[768px]:w-[10rem] cursor-pointer text-white";
     //Index and ID's
     loginHome.tabIndex = 1;
     roomSpaceList.id = "roomList";
@@ -145,7 +148,9 @@ function mainPage() {
     mainDiv.appendChild(loginHome);
     if (typeOfHomePage === 1) { 
         mainPageFunctions.appendChild(roomSpaceList);
-        mainPageFunctions.appendChild(adminFunctions);
+        if (userType === "admin") {
+            mainPageFunctions.appendChild(adminFunctions);
+        }
         mainPageFunctions.appendChild(parkingSpaceList);
         mainDiv.appendChild(mainPageFunctions) 
     };
@@ -215,15 +220,15 @@ function loginWindow() {
 //After logging in, it changes the functionality and appearance of the Login button
 function logout() {
     typeOfHomePage = 0;
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "username=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/src;";
     mainPage();
     customAlert(3,"Successful logout");
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
 
 //Create head for the table
 function createTableHead(tableHead, tableType, headType) {
-    const username = ('; '+document.cookie).split(`; username=`).pop().split(';')[0]
-    if (username == "admin") {
+    if (userType == "admin") {
         //Place tab
         let tableCell = document.createElement("td");
         tableCell.className = tab + " w-[10%] mr-5";
@@ -295,6 +300,7 @@ function createTableHead(tableHead, tableType, headType) {
                 })
             });
         }
+        //If not a admin
     } else {
         //Place tab
         let tableCell = document.createElement("td");
@@ -304,6 +310,7 @@ function createTableHead(tableHead, tableType, headType) {
         } else {
             tableCell.innerText = "Place";
         }
+        tableHead.appendChild(tableCell);
         //Time tab
         tableCell = document.createElement("td");
         tableCell.className = tab + " w-[15%]";
@@ -314,10 +321,10 @@ function createTableHead(tableHead, tableType, headType) {
         tableCell.className = tab + " w-[15%]";
         tableCell.innerText = "Date";
         tableHead.appendChild(tableCell);
-        //Date tab
+        //Delete tab
         tableCell = document.createElement("td");
         tableCell.className = tab + " w-[15%]";
-        tableCell.innerText = "Floor";
+        tableCell.innerText = "Delete reservation";
         tableHead.appendChild(tableCell);
 
     }
@@ -332,119 +339,147 @@ function createTableLine(tableData, rowId, altTableArray = 0, allReservationArra
     informationTable.id = "info" + rowId;
     //Time format 
     let altTabTimeCheck = 0;
+    let fromTime = 0;
+    let toTime = 0;
     if (tableData !== undefined) {
-        let fromTime = tableData.res_from;
-        let toTime = tableData.res_till;
-        fromTime = fromTime.slice(0, -3);
-        toTime = toTime.slice(0, -3);
-        if (altTableArray === 0) {
-            //Place tab
-            let tableCell = document.createElement("td");
-            tableCell.className = tab + " w-[10%] mr-5";
-            if (tableData.room === undefined) {
-                tableCell.innerText = tableData.spot;
+    fromTime = tableData.res_from;
+    toTime = tableData.res_till;
+    fromTime = fromTime.slice(0, -3);
+    toTime = toTime.slice(0, -3);
+    }
+    if (userType == "admin") {
+        if (tableData !== undefined) {
+            if (altTableArray === 0) {
+                //Place tab
+                let tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[10%] mr-5";
+                if (tableData.room === undefined) {
+                    tableCell.innerText = tableData.spot;
+                } else {
+                    tableCell.innerText = tableData.room;
+                }   
+                tableLine.appendChild(tableCell);
+                //Person tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[25%]";
+                tableCell.innerText = tableData.user;
+                tableLine.appendChild(tableCell);
+                //Time tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[15%]";
+                tableCell.innerText = fromTime + "-\n" + toTime;
+                tableLine.appendChild(tableCell);
+                //Date tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[15%]";
+                tableCell.innerText = tableData.date;
+                tableLine.appendChild(tableCell);
             } else {
-                tableCell.innerText = tableData.room;
-            }   
-            tableLine.appendChild(tableCell);
-            //Person tab
-            tableCell = document.createElement("td");
-            tableCell.className = tab + " w-[25%]";
-            tableCell.innerText = tableData.user;
-            tableLine.appendChild(tableCell);
-            //Time tab
-            tableCell = document.createElement("td");
-            tableCell.className = tab + " w-[15%]";
-            tableCell.innerText = fromTime + "-\n" + toTime;
-            tableLine.appendChild(tableCell);
-            //Date tab
-            tableCell = document.createElement("td");
-            tableCell.className = tab + " w-[15%]";
-            tableCell.innerText = tableData.date;
-            tableLine.appendChild(tableCell);
+                //Place tab
+                let tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[10%] mr-5";
+                if (tableData.room === undefined) {
+                    tableCell.innerText = altTableArray.spot;
+                } else {
+                    tableCell.innerText = altTableArray.room;
+                }   
+                tableLine.appendChild(tableCell);
+                //Status tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[15%]";
+                tableCell.innerText = "Reserved";
+                tableLine.appendChild(tableCell);
+                //Person tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[25%]";
+                tableCell.innerText = tableData.user;
+                tableLine.appendChild(tableCell);
+                //Time tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[15%]";
+                tableCell.innerText = fromTime + "-\n" + toTime;
+                tableLine.appendChild(tableCell);
+                //Next tab
+                tableCell = document.createElement("td");
+                tableCell.className = tab + " w-[15%]";
+                if (tableData.room === undefined) {
+                    for (let i = 0; i < allReservationArray.length; i++) {
+                        if (tableData.spot == allReservationArray[i].spot) {
+                            if (altTabTimeCheck >= 1) {
+                                tableCell.innerText = allReservationArray[i].date + "\n" + allReservationArray[i].res_from.slice(0, -3) + "-" + allReservationArray[i].res_till.slice(0, -3);
+                                tableLine.appendChild(tableCell);
+                            }
+                            altTabTimeCheck++;
+                        }
+                    }
+                } else {
+                    for (let i = 0; i < allReservationArray.length; i++) {
+                        if (tableData.room == allReservationArray[i].room) {
+                            if (altTabTimeCheck >= 1) {
+                                tableCell.innerText = allReservationArray[i].date + "\n" + allReservationArray[i].res_from.slice(0, -3) + "-" + allReservationArray[i].res_till.slice(0, -3); 
+                                tableLine.appendChild(tableCell);
+                            }
+                            altTabTimeCheck++;
+                        } 
+                    } 
+                    if (altTabTimeCheck === 1) {
+                        tableCell.innerText = "---";
+                        tableLine.appendChild(tableCell);
+                    }
+                }
+            }
         } else {
             //Place tab
             let tableCell = document.createElement("td");
             tableCell.className = tab + " w-[10%] mr-5";
-            if (tableData.room === undefined) {
-                tableCell.innerText = tableData.spot;
+            if (altTableArray.room === undefined) {
+                tableCell.innerText = altTableArray.spot;
             } else {
-                tableCell.innerText = tableData.room;
+                tableCell.innerText = altTableArray.room;
             }   
             tableLine.appendChild(tableCell);
             //Status tab
             tableCell = document.createElement("td");
             tableCell.className = tab + " w-[15%]";
-            tableCell.innerText = "Reserved";
+            tableCell.innerText = "Free";
             tableLine.appendChild(tableCell);
             //Person tab
             tableCell = document.createElement("td");
             tableCell.className = tab + " w-[25%]";
-            tableCell.innerText = tableData.user;
+            tableCell.innerText = "---";
             tableLine.appendChild(tableCell);
             //Time tab
             tableCell = document.createElement("td");
             tableCell.className = tab + " w-[15%]";
-            tableCell.innerText = fromTime + "-\n" + toTime;
+            tableCell.innerText = "---";
             tableLine.appendChild(tableCell);
             //Next tab
             tableCell = document.createElement("td");
             tableCell.className = tab + " w-[15%]";
-            if (tableData.room === undefined) {
-                for (let i = 0; i < allReservationArray.length; i++) {
-                    if (tableData.spot == allReservationArray[i].spot) {
-                        altTabTimeCheck++;
-                        if (altTabTimeCheck >= 1) {
-                            tableCell.innerText = allReservationArray[i].date + "\n" + allReservationArray[i].res_from + "-" + allReservationArray[i].res_till;
-                            tableLine.appendChild(tableCell);
-                        }
-                    }
-                }
-            } else {
-                for (let i = 0; i < allReservationArray.length; i++) {
-                    if (tableData.room == allReservationArray[i].room) {
-                        if (altTabTimeCheck >= 1) {
-                            try {
-                                tableCell.innerText = allReservationArray[i].date + "\n" + allReservationArray[i].res_from + "-" + allReservationArray[i].res_till; 
-                            } catch (pizdec) {
-                                tableCell.innerText = "---";
-                            }
-                            tableLine.appendChild(tableCell);
-                        }
-                        altTabTimeCheck++;
-                    }
-                }
-            }
+            tableCell.innerText = "---";
+            tableLine.appendChild(tableCell);
         }
+        //Normal user
     } else {
+        console.log(altTableArray);
         //Place tab
         let tableCell = document.createElement("td");
         tableCell.className = tab + " w-[10%] mr-5";
-        if (altTableArray.room === undefined) {
-            tableCell.innerText = altTableArray.spot;
+        if (tableData.room === undefined) {
+            tableCell.innerText = tableData.spot;
         } else {
-            tableCell.innerText = altTableArray.room;
+            tableCell.innerText = tableData.room;
         }   
-        tableLine.appendChild(tableCell);
-        //Status tab
-        tableCell = document.createElement("td");
-        tableCell.className = tab + " w-[15%]";
-        tableCell.innerText = "Free";
-        tableLine.appendChild(tableCell);
-        //Person tab
-        tableCell = document.createElement("td");
-        tableCell.className = tab + " w-[25%]";
-        tableCell.innerText = "---";
         tableLine.appendChild(tableCell);
         //Time tab
         tableCell = document.createElement("td");
         tableCell.className = tab + " w-[15%]";
-        tableCell.innerText = "---";
+        tableCell.innerText = fromTime + "-\n" + toTime;
         tableLine.appendChild(tableCell);
-        //Next tab
+        //Date tab
         tableCell = document.createElement("td");
         tableCell.className = tab + " w-[15%]";
-        tableCell.innerText = "---";
+        tableCell.innerText = tableData.date;
         tableLine.appendChild(tableCell);
     }
     //Create functions for each line
@@ -476,7 +511,13 @@ function createTableLine(tableData, rowId, altTableArray = 0, allReservationArra
     tableLine.appendChild(tableCell); 
     subTable.appendChild(tableLine);
     //return line
-    return subTable;
+    if (userType == "admin") {
+        return subTable;
+    } else if (userType != "admin" && tableData.user == userLoginName) {
+        return subTable;
+    } else {
+        return "skip";
+    }
 }
 //Show list with all clients
 function createList(tableType, headType = 0) {
@@ -493,8 +534,10 @@ function createList(tableType, headType = 0) {
     //Connect all elements
     tableView.appendChild(tableHead);
     mainDiv.appendChild(tableView);
-    document.getElementById("altTable").scrollIntoView();
-    document.getElementById("altTable").focus();
+    if (userType == "admin") {
+        document.getElementById("altTable").scrollIntoView();
+        document.getElementById("altTable").focus();
+    }
     //Start generate lines
     if (tableType === 0 && headType === 0) {
         listOfReservedRooms();
